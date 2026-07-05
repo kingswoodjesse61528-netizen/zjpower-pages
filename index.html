@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<title>浙江电力 · 日前电价</title>
+<meta name="theme-color" content="#08171c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="浙江电价">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  /* 钱塘潮汐 · 玉青主色（一眼区别于广东蓝） */
+  --bg:#08171c; --bg2:#0a2226; --line:rgba(190,240,232,.07);
+  --card:rgba(190,240,232,.035); --card-bd:rgba(190,240,232,.10);
+  --brand:#2dd4bf; --brand-d:#0d9488; --brand-soft:rgba(45,212,191,.15);
+  --coral:#fb7185; --green:#34d399; --amber:#fbbf24; --sky:#38bdf8;
+  --tx:#e7f3f1; --tx2:#8ea9a5; --tx3:#55706c;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --sans:'Noto Sans SC',system-ui,sans-serif;
+  --r:18px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--sans); background:var(--bg); color:var(--tx);
+  min-height:100vh; line-height:1.5; overflow-x:hidden;
+  padding:0 0 calc(28px + env(safe-area-inset-bottom));
+  background-image:
+    radial-gradient(900px 480px at 80% -10%, rgba(13,148,136,.24), transparent 60%),
+    radial-gradient(700px 420px at -12% 14%, rgba(56,189,248,.10), transparent 55%),
+    linear-gradient(180deg,#0a1f24,#08171c 42%);
+  background-attachment:fixed;
+}
+/* 网格底 + 底部潮汐波纹遮罩 */
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.5;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:34px 34px; mask-image:radial-gradient(circle at 50% 16%,#000,transparent 78%);
+}
+.wrap{position:relative; z-index:1; max-width:560px; margin:0 auto; padding:0 16px}
+
+/* ── 顶部条 ── */
+.top{
+  position:sticky; top:0; z-index:20; margin:0 -16px; padding:calc(12px + env(safe-area-inset-top)) 16px 12px;
+  background:linear-gradient(180deg,rgba(8,23,28,.95),rgba(8,23,28,.72) 70%,transparent);
+  backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+}
+.top-row{display:flex; align-items:center; gap:10px}
+.spark{
+  width:34px;height:34px;border-radius:10px;flex:0 0 auto;display:grid;place-items:center;
+  background:linear-gradient(145deg,var(--brand),var(--brand-d));
+  box-shadow:0 6px 18px rgba(13,148,136,.5),inset 0 1px 0 rgba(255,255,255,.3); color:#04231f
+}
+.spark svg{width:19px;height:19px}
+.ttl{font-weight:900;font-size:16px;letter-spacing:.5px;line-height:1.1}
+.ttl small{display:block;font-weight:400;font-size:10.5px;color:var(--tx2);letter-spacing:1.6px;margin-top:2px}
+.tag{
+  margin-left:auto;font-family:var(--mono);font-size:10px;font-weight:600;color:var(--brand);
+  border:1px solid rgba(45,212,191,.4);border-radius:7px;padding:3px 8px;background:var(--brand-soft);white-space:nowrap
+}
+.gen{font-family:var(--mono);font-size:10px;color:var(--tx3);margin-top:9px;letter-spacing:.3px}
+
+/* ── 段式 Tab ── */
+.tabs{display:flex;gap:4px;margin-top:12px;padding:4px;border-radius:14px;background:rgba(190,240,232,.04);border:1px solid var(--card-bd)}
+.tab{flex:1;text-align:center;padding:9px 0;border-radius:10px;font-size:13.5px;font-weight:700;color:var(--tx2);cursor:pointer;transition:.25s}
+.tab.on{color:#04231f;background:linear-gradient(145deg,var(--brand),var(--brand-d));box-shadow:0 5px 16px rgba(13,148,136,.42)}
+
+/* ── 卡片 ── */
+.card{
+  background:var(--card);border:1px solid var(--card-bd);border-radius:var(--r);
+  padding:16px;margin-top:14px;backdrop-filter:blur(8px);
+  box-shadow:0 10px 30px rgba(0,0,0,.28);
+  animation:rise .5s both;
+}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.card-h{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--tx2);letter-spacing:1.6px;text-transform:uppercase;margin-bottom:12px}
+.card-h::before{content:"";width:3px;height:13px;border-radius:2px;background:linear-gradient(var(--brand),var(--brand-d))}
+.card-h .r{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:600;color:var(--tx3);font-family:var(--mono);font-size:10.5px}
+
+/* ── 英雄区 · 潮汐水位计 ── */
+.hero{position:relative;overflow:hidden;background:
+  radial-gradient(130% 110% at 100% 0,rgba(13,148,136,.24),transparent 55%),var(--card)}
+.hero .lab{font-size:12px;color:var(--tx2);letter-spacing:1px}
+.hero .date{font-family:var(--mono);font-size:12px;color:var(--brand);margin-left:6px}
+.bignum{font-family:var(--mono);font-weight:700;font-size:56px;line-height:1;margin:8px 0 2px;letter-spacing:-1px;
+  background:linear-gradient(120deg,#fff,#a7f3e8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.unit{font-size:14px;color:var(--tx2);font-family:var(--mono);margin-left:4px;-webkit-text-fill-color:initial}
+.delta{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:13px;font-weight:600;margin-top:4px;padding:3px 9px;border-radius:8px}
+.delta.up{color:var(--coral);background:rgba(251,113,133,.14)}
+.delta.dn{color:var(--green);background:rgba(52,211,153,.14)}
+.delta.fl{color:var(--tx2);background:rgba(190,240,232,.06)}
+
+/* 潮汐带：全天价格包络 + 80% 潮汐区间 + 中位水线 */
+.tide{margin-top:16px}
+.tide-scale{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--tx3);margin-bottom:6px}
+.tide-track{position:relative;height:44px;border-radius:11px;overflow:hidden;
+  background:linear-gradient(180deg,rgba(56,189,248,.05),rgba(45,212,191,.05));
+  border:1px solid var(--card-bd)}
+.tide-band{position:absolute;top:0;bottom:0;border-radius:0;
+  background:linear-gradient(180deg,rgba(45,212,191,.34),rgba(56,189,248,.14));
+  border-left:1px solid rgba(45,212,191,.5);border-right:1px solid rgba(56,189,248,.5);
+  animation:tideIn .9s cubic-bezier(.22,1,.36,1) both}
+@keyframes tideIn{from{transform:scaleX(0);transform-origin:left}to{transform:scaleX(1)}}
+.tide-line{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--brand);
+  box-shadow:0 0 12px var(--brand),0 0 4px #fff;animation:fadeIn 1.1s .3s both}
+.tide-line::after{content:"";position:absolute;top:-4px;left:-3px;width:8px;height:8px;border-radius:50%;
+  background:var(--brand);box-shadow:0 0 10px var(--brand)}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.tide-mk{position:absolute;bottom:4px;font-family:var(--mono);font-size:9.5px;transform:translateX(-50%);white-space:nowrap}
+.tide-mk.pk{color:var(--coral)} .tide-mk.vl{color:var(--green)}
+.tide-mk .d{width:5px;height:5px;border-radius:50%;margin:0 auto 2px;box-shadow:0 0 7px currentColor;background:currentColor}
+.tide-leg{display:flex;gap:14px;margin-top:9px;font-size:10.5px;color:var(--tx3);flex-wrap:wrap}
+.tide-leg b{font-family:var(--mono);color:var(--tx2);font-weight:600}
+
+/* 预警条 */
+.warnbar{display:flex;align-items:center;gap:8px;margin-top:14px;padding:9px 12px;border-radius:12px;
+  font-size:12.5px;font-weight:600;border:1px solid transparent}
+.warnbar.ok{color:var(--brand);background:var(--brand-soft);border-color:rgba(45,212,191,.28)}
+.warnbar.wide{color:var(--amber);background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.3)}
+.warnbar.spike{color:var(--coral);background:rgba(251,113,133,.12);border-color:rgba(251,113,133,.32)}
+.warnbar .led{width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 9px currentColor;flex:0 0 auto;animation:pulse 1.8s infinite}
+
+/* ── 指标 chip ── */
+.chips{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:14px}
+.chip{background:rgba(190,240,232,.03);border:1px solid var(--card-bd);border-radius:13px;padding:11px 10px}
+.chip .k{font-size:10.5px;color:var(--tx3);letter-spacing:.5px}
+.chip .v{font-family:var(--mono);font-weight:700;font-size:19px;margin-top:3px;letter-spacing:-.5px}
+.chip .s{font-family:var(--mono);font-size:10px;color:var(--tx2)}
+.chip.pk .v{color:var(--coral)} .chip.vl .v{color:var(--green)} .chip.sp .v{color:var(--amber)} .chip.bd .v{color:var(--sky)}
+
+/* ── 交易提示 ── */
+.tips{display:grid;gap:0}
+.tip{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.tip:last-child{border-bottom:0}
+.tip .ic{width:26px;height:26px;border-radius:8px;flex:0 0 auto;display:grid;place-items:center;font-size:13px;background:var(--brand-soft)}
+.tip .k{font-size:12.5px;color:var(--tx2)} .tip .v{margin-left:auto;font-weight:700;font-size:13px;text-align:right;max-width:62%}
+
+/* ── 24点表 ── */
+.h24{display:grid;grid-template-columns:repeat(2,1fr);gap:0 18px;margin-top:4px}
+.h24 .r{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+.h24 .t{font-family:var(--mono);color:var(--tx3);font-size:12px;width:42px}
+.h24 .rng{font-family:var(--mono);font-size:10px;color:var(--tx3);margin-left:2px}
+.h24 .p{font-family:var(--mono);font-weight:600;margin-left:auto}
+.dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+.rk{font-size:10px;padding:1px 6px;border-radius:6px;font-weight:600}
+.rk.hi{color:var(--coral);background:rgba(251,113,133,.14)} .rk.mi{color:var(--amber);background:rgba(251,191,36,.14)}
+
+/* ── 复盘：准度汇总 ── */
+.acc-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.acc-grid .chip .v{font-size:24px}
+.cmp-dates{display:flex;gap:7px;overflow-x:auto;padding:2px 0 10px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.cmp-dates::-webkit-scrollbar{display:none}
+.cmp-day{flex:0 0 auto;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--tx2);padding:6px 11px;border-radius:10px;border:1px solid var(--card-bd);background:rgba(190,240,232,.03);cursor:pointer;transition:.2s;white-space:nowrap}
+.cmp-day.on{color:#04231f;background:linear-gradient(145deg,var(--brand),var(--brand-d));border-color:transparent;box-shadow:0 4px 12px rgba(13,148,136,.4)}
+.cmp-empty{text-align:center;color:var(--tx3);font-size:13px;padding:38px 0;line-height:1.7}
+
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:5px 12px;border-radius:20px}
+.pill.优{color:var(--brand);background:var(--brand-soft)}
+.pill.良{color:var(--green);background:rgba(52,211,153,.14)}
+.pill.注意{color:var(--amber);background:rgba(251,191,36,.14)}
+.pill.退化{color:var(--coral);background:rgba(251,113,133,.14)}
+.pill .led{width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 9px currentColor;animation:pulse 1.8s infinite}
+@keyframes pulse{50%{opacity:.4}}
+.acc-list .r{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+.acc-list .r:last-child{border-bottom:0}
+.acc-list .d{font-family:var(--mono);font-size:12px;color:var(--tx2);width:74px}
+.acc-list .m{font-family:var(--mono);font-weight:600;margin-left:auto}
+.acc-list .rm{font-family:var(--mono);font-size:11px;width:56px;text-align:right}
+.acc-list .cv{font-family:var(--mono);font-size:11px;color:var(--tx3);width:46px;text-align:right}
+
+/* ── 模型 ── */
+.mrow{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.mrow:last-child{border-bottom:0}
+.mrow .k{color:var(--tx2)} .mrow .v{font-family:var(--mono);font-weight:600;text-align:right;max-width:62%}
+.m3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+/* 架构说明 */
+.arch{display:grid;gap:10px}
+.arch .step{display:flex;gap:11px;align-items:flex-start;padding:11px;border-radius:12px;background:rgba(190,240,232,.03);border:1px solid var(--card-bd)}
+.arch .n{font-family:var(--mono);font-weight:700;font-size:13px;color:var(--brand);flex:0 0 auto;width:22px;height:22px;border-radius:7px;display:grid;place-items:center;background:var(--brand-soft)}
+.arch .st{font-weight:700;font-size:13px}
+.arch .sd{font-size:11.5px;color:var(--tx2);margin-top:2px;line-height:1.55}
+
+.chart-box{position:relative;height:230px;margin-top:4px}
+.note{font-size:11px;color:var(--tx3);margin-top:10px;line-height:1.65}
+.foot{text-align:center;color:var(--tx3);font-size:10.5px;font-family:var(--mono);margin-top:22px;letter-spacing:.5px}
+.hidden{display:none}
+.loading{text-align:center;padding:80px 0;color:var(--tx2)}
+.spin{width:30px;height:30px;border:3px solid var(--card-bd);border-top-color:var(--brand);border-radius:50%;margin:0 auto 14px;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="top-row">
+      <div class="spark"><svg viewBox="0 0 24 24" fill="none"><path d="M13 2L4.5 13.5H11L10 22L19.5 10H13L13 2Z" fill="currentColor"/></svg></div>
+      <div>
+        <div class="ttl">浙江电力 · 日前电价<small>ZHEJIANG DAY-AHEAD FORECAST</small></div>
+      </div>
+      <div class="tag" id="machineTag">—</div>
+    </div>
+    <div class="gen" id="genLine">载入中…</div>
+    <nav class="tabs">
+      <div class="tab on" data-tab="pred">预测</div>
+      <div class="tab" data-tab="acc">复盘</div>
+      <div class="tab" data-tab="model">模型</div>
+    </nav>
+  </header>
+
+  <div id="loading" class="loading"><div class="spin"></div>正在载入快照…</div>
+
+  <!-- 预测 -->
+  <section id="pred" class="view hidden">
+    <div class="card hero">
+      <div><span class="lab">次日预测均价</span><span class="date" id="predDate"></span></div>
+      <div><span class="bignum" id="avgPrice">—</span><span class="unit">元/MWh</span></div>
+      <div id="deltaBox"></div>
+
+      <div class="tide">
+        <div class="tide-scale"><span id="tideLo">—</span><span style="color:var(--tx2)">全天价格潮汐区间</span><span id="tideHi">—</span></div>
+        <div class="tide-track" id="tideTrack"></div>
+        <div class="tide-leg">
+          <span><b style="color:var(--brand)">┃</b> 中位均价</span>
+          <span><b style="color:var(--sky)">▓</b> 80% 区间（Q10–Q90）</span>
+          <span><b style="color:var(--coral)">●</b> 峰　<b style="color:var(--green)">●</b> 谷</span>
+        </div>
+      </div>
+
+      <div class="warnbar" id="warnBar"><span class="led"></span><span id="warnTxt">—</span></div>
+    </div>
+
+    <div class="chips" id="chips"></div>
+
+    <div class="card">
+      <div class="card-h">24 点预测曲线 <span class="r">中位 + 80% 区间</span></div>
+      <div class="chart-box"><canvas id="predChart"></canvas></div>
+      <div class="note" id="bandNote"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">交易提示</div>
+      <div class="tips" id="tips"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">24 点明细 <span class="r">价 · 区间</span></div>
+      <div class="h24" id="h24"></div>
+    </div>
+  </section>
+
+  <!-- 复盘 -->
+  <section id="acc" class="view hidden">
+    <div class="card" id="cmpCard">
+      <div class="card-h">预测 vs 事后实际</div>
+      <div class="cmp-dates" id="cmpDates"></div>
+      <div class="chart-box"><canvas id="cmpChart"></canvas></div>
+      <div class="note" id="cmpNote"></div>
+      <div class="chips" id="cmpChips" style="margin-top:12px"></div>
+    </div>
+    <div class="card">
+      <div class="card-h">生产准度 <span class="r" id="accDays"></span></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:13px">
+        <span class="pill" id="statusPill"><span class="led"></span><span id="statusTxt">—</span></span>
+        <span style="font-size:11.5px;color:var(--tx3)">按近 7 日 rMAE 判定</span>
+      </div>
+      <div class="acc-grid" id="accSummary"></div>
+      <div class="note">rMAE = 模型 MAE ÷ 抄昨天(persistence) MAE，<b style="color:var(--brand)">&lt;1</b> 才算真赢；区间命中率目标 0.80。这是零泄露的真实次日误差，非回测。</div>
+    </div>
+    <div class="card">
+      <div class="card-h">近 30 日 rMAE 趋势</div>
+      <div class="chart-box"><canvas id="accChart"></canvas></div>
+      <div class="note"><span style="color:var(--coral)">红线</span> = 1.0 抄昨天基准（越低越好）；<span style="color:var(--amber)">琥珀线</span> = 0.9 关注线</div>
+    </div>
+    <div class="card">
+      <div class="card-h">逐日记录 <span class="r">MAE · rMAE · 命中</span></div>
+      <div class="acc-list" id="accList"></div>
+    </div>
+  </section>
+
+  <!-- 模型 -->
+  <section id="model" class="view hidden">
+    <div class="card">
+      <div class="card-h">模型信息</div>
+      <div id="modelMeta"></div>
+    </div>
+    <div class="card">
+      <div class="card-h">测试集表现</div>
+      <div class="m3" id="modelMetrics"></div>
+      <div class="note" id="modelNote"></div>
+    </div>
+    <div class="card">
+      <div class="card-h">架构 · 双阶段 stacking + 分位数</div>
+      <div class="arch" id="arch"></div>
+    </div>
+  </section>
+
+  <div class="foot" id="foot"></div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const f0=n=>Math.round(n).toString();
+const f1=n=>(Math.round(n*10)/10).toFixed(1);
+const f3=n=>(Math.round(n*1000)/1000).toFixed(3);
+const hh=h=>String(h).padStart(2,'0')+':00';
+const C={brand:'#2dd4bf',brandD:'#0d9488',coral:'#fb7185',green:'#34d399',amber:'#fbbf24',sky:'#38bdf8',tx2:'#8ea9a5',line:'rgba(190,240,232,.07)'};
+let DATA=null;
+
+function relTime(iso){
+  try{
+    const t=new Date(iso), now=new Date(), mins=Math.round((now-t)/60000);
+    if(mins<1)return '刚刚';
+    if(mins<60)return mins+' 分钟前';
+    if(mins<1440)return Math.round(mins/60)+' 小时前';
+    return Math.round(mins/1440)+' 天前';
+  }catch(e){return iso}
+}
+// 预警 → 样式类
+function warnClass(w){ if(!w)return'ok'; if(w.includes('尖峰'))return'spike'; if(w.includes('不确定')||w.includes('宽'))return'wide'; return'ok' }
+
+function boot(){
+  setView('pred');
+  document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+    t.classList.add('on'); setView(t.dataset.tab);
+  });
+  load();
+}
+function setView(v){
+  document.querySelectorAll('.view').forEach(s=>s.classList.add('hidden'));
+  const el=$('#'+v); if(el){el.classList.remove('hidden');
+    el.querySelectorAll('.card').forEach((c,i)=>{c.style.animation='none';c.offsetHeight;c.style.animation='rise .5s both';c.style.animationDelay=(i*0.05)+'s'});}
+}
+
+async function load(){
+  try{
+    const r=await fetch('./data.json?t='+Date.now(),{cache:'no-store'});
+    if(!r.ok)throw new Error(r.status);
+    DATA=await r.json();
+    render();
+  }catch(e){
+    $('#loading').innerHTML='<div style="color:var(--coral)">⚠ 暂时无法载入数据</div><div style="font-size:12px;margin-top:8px;color:var(--tx3)">'+e+'</div>';
+  }
+}
+
+function render(){
+  $('#loading').classList.add('hidden');
+  $('#machineTag').textContent='['+(DATA.meta.machine||'—')+']';
+  $('#genLine').textContent='更新于 '+relTime(DATA.meta.generated_at)+' · 数据截至 '+DATA.meta.data_date;
+  $('#foot').textContent='ZJPOWER · '+(DATA.model.version||'')+' · 仅供内部参考';
+  renderPred(); renderAcc(); renderModel();
+}
+
+/* ───── 预测 ───── */
+function renderPred(){
+  const p=DATA.prediction, s=p.summary, hrs=p.hours;
+  $('#predDate').textContent=p.date;
+  $('#avgPrice').textContent=f1(s.avg_median);
+
+  // 与昨日均价对比
+  const his=DATA.history||[];
+  const prev=his.length>=2?his[his.length-2]:null;
+  if(prev){
+    const d=s.avg_median-prev.avg, flat=Math.abs(d)<1;
+    const cls=flat?'fl':(d>=0?'up':'dn'), arw=flat?'▬':(d>=0?'▲':'▼');
+    $('#deltaBox').innerHTML='<span class="delta '+cls+'">'+arw+' '+f1(Math.abs(d))+' 元/MWh 较昨日</span>';
+  }
+
+  // 潮汐水位计
+  drawTide(hrs,s);
+
+  // 预警条
+  const wc=s.warning_counts||{}; const spike=wc['高度尖峰·双确认']||0, wide=wc['不确定性偏高']||0;
+  let wCls='ok', wTxt='全天常态 · 无尖峰、区间平稳';
+  if(spike>0){ wCls='spike'; wTxt='高度尖峰预警 · '+spike+' 个时段中位与 Q90 双双指向尖峰'; }
+  else if(wide>0){ wCls='wide'; wTxt='不确定性偏高 · '+wide+' 个时段 80% 区间偏宽，模型把握有限'; }
+  $('#warnBar').className='warnbar '+wCls; $('#warnTxt').textContent=wTxt;
+
+  // chips
+  const bandW=s.band80.q90_avg-s.band80.q10_avg;
+  $('#chips').innerHTML=[
+    ['峰值','pk',f1(s.peak.price),hh(s.peak.hour)],
+    ['谷值','vl',f1(s.valley.price),hh(s.valley.hour)],
+    ['峰谷差','sp',f1(s.peak.price-s.valley.price),'元/MWh'],
+    ['区间宽度','bd',f1(bandW),'Q90-Q10 均'],
+    ['谷时均','',f1(s.band80.q10_avg),'Q10'],
+    ['峰时均','',f1(s.band80.q90_avg),'Q90'],
+  ].map(([k,cls,v,sub])=>'<div class="chip '+cls+'"><div class="k">'+k+'</div><div class="v">'+v+'</div><div class="s">'+sub+'</div></div>').join('');
+
+  // 交易提示（从 hours 计算）
+  $('#tips').innerHTML=buildTips(hrs,s).map(([i,k,v])=>
+    '<div class="tip"><span class="ic">'+i+'</span><span class="k">'+k+'</span><span class="v">'+v+'</span></div>').join('');
+
+  // 24 点明细
+  $('#h24').innerHTML=hrs.map(h=>{
+    const isPk=h.hour===s.peak.hour, isVl=h.hour===s.valley.hour;
+    const dot=isPk?C.coral:isVl?C.green:'rgba(190,240,232,.18)';
+    const wc2=warnClass(h.warning);
+    const rk=wc2==='spike'?'<span class="rk hi">尖峰</span>':wc2==='wide'?'<span class="rk mi">宽幅</span>':'';
+    return '<div class="r"><span class="dot" style="background:'+dot+'"></span><span class="t">'+hh(h.hour)+'</span>'+rk+
+      '<span class="rng">'+f0(h.q10)+'~'+f0(h.q90)+'</span><span class="p">'+f1(h.median)+'</span></div>';
+  }).join('');
+
+  drawPredChart();
+}
+
+// 交易提示：低价窗口 / 高价时段 / 区间判断 / 尖峰关注
+function buildTips(hrs,s){
+  const sorted=[...hrs].sort((a,b)=>a.median-b.median);
+  const lowHrs=sorted.slice(0,3).map(h=>h.hour).sort((a,b)=>a-b);
+  const highHrs=sorted.slice(-3).map(h=>h.hour).sort((a,b)=>a-b);
+  const bandW=s.band80.q90_avg-s.band80.q10_avg;
+  const clarity=bandW<50?'区间偏窄 · 行情清晰':bandW<100?'区间适中 · 存在分歧':'区间偏宽 · 高度不确定';
+  const spikeH=hrs.filter(h=>warnClass(h.warning)==='spike').map(h=>h.hour);
+  const focus=spikeH.length?spikeH.map(hh).join('、'):'无尖峰预警时段';
+  return [
+    ['🟢','低价窗口',fmtHrs(lowHrs)+' · 谷 '+f1(s.valley.price)],
+    ['🔺','高价时段',fmtHrs(highHrs)+' · 峰 '+f1(s.peak.price)],
+    ['📐','区间判断',clarity+'（±'+f1(bandW/2)+'）'],
+    ['🎯','尖峰关注',focus],
+  ];
+}
+function fmtHrs(arr){
+  // 连续小时合并成区间
+  const out=[]; let st=arr[0], pv=arr[0];
+  for(let i=1;i<arr.length;i++){ if(arr[i]===pv+1){pv=arr[i];} else {out.push(st===pv?hh(st):hh(st)+'-'+hh(pv+1));st=pv=arr[i];} }
+  out.push(st===pv?hh(st):hh(st)+'-'+hh(pv+1));
+  return out.join('、');
+}
+
+// 潮汐水位计：全天 [minQ10..maxQ90] 为轨，80% 均带为潮汐，中位均价为水线
+function drawTide(hrs,s){
+  const lo=Math.min(...hrs.map(h=>h.q10)), hi=Math.max(...hrs.map(h=>h.q90));
+  const span=Math.max(hi-lo,1);
+  const pos=v=>((v-lo)/span*100);
+  $('#tideLo').textContent=f0(lo); $('#tideHi').textContent=f0(hi);
+  const bL=pos(s.band80.q10_avg), bR=pos(s.band80.q90_avg), mid=pos(s.avg_median);
+  const pkP=pos(s.peak.price), vlP=pos(s.valley.price);
+  $('#tideTrack').innerHTML=
+    '<div class="tide-band" style="left:'+bL+'%;width:'+(bR-bL)+'%"></div>'+
+    '<div class="tide-line" style="left:'+mid+'%"></div>'+
+    '<div class="tide-mk vl" style="left:'+clampP(vlP)+'%"><div class="d"></div>'+f0(s.valley.price)+'</div>'+
+    '<div class="tide-mk pk" style="left:'+clampP(pkP)+'%"><div class="d"></div>'+f0(s.peak.price)+'</div>';
+}
+function clampP(p){ return Math.max(6,Math.min(94,p)); }
+
+function drawPredChart(){
+  const p=DATA.prediction, s=p.summary, hrs=p.hours;
+  const labels=hrs.map(h=>hh(h.hour));
+  const med=hrs.map(h=>h.median), q90=hrs.map(h=>h.q90), q10=hrs.map(h=>h.q10);
+  const hasAct=hrs.some(h=>h.actual!=null);
+  const act=hrs.map(h=>h.actual!=null?h.actual:null);
+  const ptC=hrs.map(h=>h.hour===s.peak.hour?C.coral:h.hour===s.valley.hour?C.green:'rgba(0,0,0,0)');
+  const ptR=hrs.map(h=>(h.hour===s.peak.hour||h.hour===s.valley.hour)?4.5:0);
+  const ds=[
+    {data:q90,borderColor:'rgba(0,0,0,0)',pointRadius:0,fill:false,_band:1},
+    {data:q10,borderColor:'rgba(0,0,0,0)',pointRadius:0,fill:'-1',backgroundColor:'rgba(45,212,191,.13)',_band:1},
+    {data:hrs.map(()=>s.avg_median),borderColor:C.amber,borderWidth:1.3,borderDash:[5,4],pointRadius:0,fill:false,_band:1},
+    {data:med,borderColor:C.brand,borderWidth:2.5,tension:.35,fill:false,
+      pointRadius:ptR,pointBackgroundColor:ptC,pointBorderColor:'#fff',pointBorderWidth:1.5,pointHoverRadius:5,label:'中位'}
+  ];
+  if(hasAct) ds.push({data:act,borderColor:C.coral,borderWidth:2,borderDash:[4,3],tension:.35,fill:false,pointRadius:0,pointHoverRadius:4,label:'实际'});
+  if(window._pc) window._pc.destroy();
+  window._pc=new Chart($('#predChart'),{type:'line',data:{labels,datasets:ds},options:baseChart({unit:'元/MWh',showTip:2})});
+  $('#bandNote').innerHTML='<span style="color:var(--brand)">━</span> 中位　阴影=80% 区间（Q10–Q90）　<span style="color:var(--amber)">┄</span> 均价 '+f1(s.avg_median)+
+    (hasAct?'　<span style="color:var(--coral)">┅</span> 事后实际':'')+
+    '　<span style="color:var(--coral)">●</span>峰 '+f1(s.peak.price)+'　<span style="color:var(--green)">●</span>谷 '+f1(s.valley.price);
+}
+
+/* ───── 复盘 ───── */
+function rmaeGrade(rmae){ if(rmae==null)return'注意'; if(rmae<0.85)return'优'; if(rmae<0.95)return'良'; if(rmae<1.0)return'注意'; return'退化'; }
+function renderAcc(){
+  const a=DATA.accuracy, s=a.summary||{};
+  $('#accDays').textContent=(s.n_days||0)+' 天累积';
+  const grade=rmaeGrade(s.avg_rmae_7);
+  $('#statusPill').className='pill '+grade; $('#statusTxt').textContent=grade;
+  const cov=s.cover80_mean;
+  $('#accSummary').innerHTML=[
+    ['近 7 日 rMAE',s.avg_rmae_7!=null?f3(s.avg_rmae_7):'—','vs 抄昨天'],
+    ['区间命中率',cov!=null?f0(cov*100)+'%':'—','目标 80%'],
+    ['近 30 日 MAE',s.avg_mae_30!=null?f1(s.avg_mae_30):'—','元/MWh'],
+    ['近 7 日 MAE',s.avg_mae_7!=null?f1(s.avg_mae_7):'—','元/MWh'],
+  ].map(([k,v,sub])=>'<div class="chip"><div class="k">'+k+'</div><div class="v">'+v+'</div><div class="s">'+sub+'</div></div>').join('');
+
+  $('#accList').innerHTML=[...a.records].reverse().map(r=>{
+    const g=rmaeGrade(r.rmae);
+    const col=g==='退化'?C.coral:g==='注意'?C.amber:g==='良'?C.green:C.brand;
+    return '<div class="r"><span class="dot" style="background:'+col+';box-shadow:0 0 8px '+col+'"></span>'+
+      '<span class="d">'+r.date+'</span>'+
+      '<span class="m">'+(r.mae!=null?f1(r.mae):'—')+'</span>'+
+      '<span class="rm" style="color:'+col+'">'+(r.rmae!=null?f3(r.rmae):'—')+'</span>'+
+      '<span class="cv">'+(r.cover80!=null?f0(r.cover80*100)+'%':'—')+'</span></div>';
+  }).join('');
+
+  drawAccChart();
+  renderCompare();
+}
+
+let CMP_SEL=-1;
+function renderCompare(){
+  const list=DATA.compare||[];
+  const datesEl=$('#cmpDates');
+  if(!list.length){
+    datesEl.innerHTML=''; $('#cmpNote').innerHTML=''; $('#cmpChips').innerHTML='';
+    $('#cmpCard').querySelector('.chart-box').innerHTML='<div class="cmp-empty">尚无已结算对比日<br>次日预测经事后实际结算后自动出现</div>';
+    return;
+  }
+  if(CMP_SEL<0||CMP_SEL>=list.length) CMP_SEL=list.length-1;
+  datesEl.innerHTML=list.map((c,i)=>'<div class="cmp-day'+(i===CMP_SEL?' on':'')+'" data-i="'+i+'">'+c.date.slice(5)+'</div>').join('');
+  datesEl.querySelectorAll('.cmp-day').forEach(el=>el.onclick=()=>{CMP_SEL=+el.dataset.i;renderCompare();});
+  drawCompare(list[CMP_SEL]);
+}
+function drawCompare(c){
+  const labels=c.hours.map(h=>hh(h.hour));
+  const pred=c.hours.map(h=>h.pred), actual=c.hours.map(h=>h.actual);
+  if(window._cc) window._cc.destroy();
+  window._cc=new Chart($('#cmpChart'),{type:'line',
+    data:{labels,datasets:[
+      {label:'预测',data:pred,borderColor:C.brand,borderWidth:2.3,tension:.35,fill:false,pointRadius:0,pointHoverRadius:4},
+      {label:'实际',data:actual,borderColor:C.coral,borderWidth:2.3,tension:.35,fill:'-1',backgroundColor:'rgba(251,113,133,.10)',pointRadius:0,pointHoverRadius:4},
+    ]},
+    options:Object.assign(baseChart({unit:'元/MWh',showTip:0}),{
+      plugins:Object.assign(baseChart({unit:'元/MWh',showTip:0}).plugins,{
+        legend:{display:true,position:'top',align:'end',labels:{color:C.tx2,font:{size:11},boxWidth:14,boxHeight:3,usePointStyle:false}},
+        tooltip:tipCfg(true)
+      })
+    })
+  });
+  $('#cmpNote').innerHTML='<span style="color:var(--brand)">━</span> 预测　<span style="color:var(--coral)">━</span> 事后实际　阴影=偏差';
+  const actAvg=actual.reduce((x,y)=>x+y,0)/actual.length, predAvg=pred.reduce((x,y)=>x+y,0)/pred.length;
+  $('#cmpChips').innerHTML=[
+    ['当日 MAE',f1(c.mae),'元/MWh',C.brand],
+    ['预测均价',f1(predAvg),'元/MWh',C.brand],
+    ['实际均价',f1(actAvg),'元/MWh',C.coral],
+  ].map(([k,v,s,col])=>'<div class="chip"><div class="k">'+k+'</div><div class="v" style="color:'+col+'">'+v+'</div><div class="s">'+s+'</div></div>').join('');
+}
+
+function drawAccChart(){
+  const a=DATA.accuracy;
+  const recs=a.records.filter(r=>r.rmae!=null);
+  const labels=recs.map(r=>r.date.slice(5));
+  const rmae=recs.map(r=>r.rmae);
+  if(window._ac) window._ac.destroy();
+  window._ac=new Chart($('#accChart'),{type:'line',
+    data:{labels,datasets:[
+      {data:recs.map(()=>1.0),borderColor:'rgba(251,113,133,.6)',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false},
+      {data:recs.map(()=>0.9),borderColor:'rgba(251,191,36,.55)',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false},
+      {data:rmae,borderColor:C.brand,borderWidth:2.3,tension:.3,fill:true,
+        backgroundColor:(ctx)=>{const cc=ctx.chart.ctx,g=cc.createLinearGradient(0,0,0,230);
+          g.addColorStop(0,'rgba(45,212,191,.30)');g.addColorStop(1,'rgba(45,212,191,0)');return g;},
+        pointRadius:recs.length<=8?3:0,pointHoverRadius:4,pointBackgroundColor:C.brand}
+    ]},
+    options:baseChart({unit:'',showTip:2,dec:3})
+  });
+}
+
+/* ───── 模型 ───── */
+function renderModel(){
+  const m=DATA.model, t=m.test_metrics||{};
+  const ta=(m.trained_at||'').replace('T',' ').slice(0,16);
+  $('#modelMeta').innerHTML=[
+    ['版本',m.version],['训练时间',ta],['训练区间',m.train_period],
+    ['测试起点',m.test_start],
+    ['特征数','STAGE1 '+m.stage1_feature_count+' · STAGE2 '+m.stage2_feature_count],
+  ].map(([k,v])=>'<div class="mrow"><span class="k">'+k+'</span><span class="v">'+(v||'—')+'</span></div>').join('');
+
+  $('#modelMetrics').innerHTML=[
+    ['测试 MAE',t.test_mae!=null?f1(t.test_mae):'—','元/MWh'],
+    ['测试 rMAE',t.test_rmae!=null?f3(t.test_rmae):'—','vs 抄昨天'],
+    ['区间覆盖',t.interval_80_coverage!=null?f0(t.interval_80_coverage*100)+'%':'—','80% 目标'],
+  ].map(([k,v,s])=>'<div class="chip"><div class="k">'+k+'</div><div class="v">'+v+'</div><div class="s">'+s+'</div></div>').join('');
+  $('#modelNote').textContent='测试样本 '+(t.test_n!=null?t.test_n+' 点':'—')+' · 数值越低越好，rMAE<1 优于抄昨天';
+
+  $('#arch').innerHTML=[
+    ['1','STAGE1 价格轻模型','仅用价格滞后（昨日/前48时/上周同时）+ 日历，全历史训练，产出 s1_pred 元特征。'],
+    ['2','STAGE2 主模型','在 s1_pred 之上叠加边界（负荷/新能源/竞价空间）+ 气象特征，出中位预测。'],
+    ['3','Q10 / Q90 分位数','在见过宽分布的边界齐全段训练，出 80% 区间——修复 v4「Q90 学不到尖峰」的老问题。'],
+    ['4','双重预警','中位≥450 且 Q90≥550 → 尖峰双确认；Q90-Q10≥250 → 不确定性偏高。'],
+  ].map(([n,st,sd])=>'<div class="step"><span class="n">'+n+'</span><div><div class="st">'+st+'</div><div class="sd">'+sd+'</div></div></div>').join('');
+}
+
+/* ───── Chart.js 通用配置 ───── */
+function tipCfg(showLabel){
+  return {backgroundColor:'rgba(10,34,38,.95)',borderColor:'rgba(45,212,191,.4)',borderWidth:1,
+    titleColor:'#e7f3f1',bodyColor:'#8ea9a5',padding:10,cornerRadius:9,displayColors:false,
+    titleFont:{family:'IBM Plex Mono'},bodyFont:{family:'IBM Plex Mono'},
+    callbacks:{label:c=>' '+(showLabel?c.dataset.label+'  ':'')+f1(c.parsed.y)+' 元/MWh'}};
+}
+function baseChart({unit,showTip,dec}){
+  return {
+    responsive:true,maintainAspectRatio:false,animation:{duration:700},
+    interaction:{mode:'index',intersect:false},
+    plugins:{legend:{display:false},
+      tooltip:{backgroundColor:'rgba(10,34,38,.95)',borderColor:'rgba(45,212,191,.4)',borderWidth:1,
+        titleColor:'#e7f3f1',bodyColor:'#8ea9a5',padding:10,cornerRadius:9,displayColors:false,
+        titleFont:{family:'IBM Plex Mono'},bodyFont:{family:'IBM Plex Mono'},
+        filter:(it)=>it.datasetIndex>=(showTip==null?0:showTip),
+        callbacks:{label:c=>' '+(dec===3?f3(c.parsed.y):f1(c.parsed.y))+(unit?' '+unit:'')}}},
+    scales:{
+      x:{grid:{display:false},ticks:{color:C.tx2,font:{family:'IBM Plex Mono',size:9},maxRotation:0,autoSkip:true,maxTicksLimit:7}},
+      y:{grid:{color:C.line},ticks:{color:C.tx2,font:{family:'IBM Plex Mono',size:10}},title:{display:false}}
+    }
+  };
+}
+
+boot();
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
