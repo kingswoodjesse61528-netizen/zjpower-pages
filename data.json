@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-07-07T07:36:55",
+    "generated_at": "2026-07-07T08:00:35",
     "machine": "hydtzyj",
     "data_date": "2026-07-06",
     "pred_date": "2026-07-07"
@@ -237,14 +237,22 @@
         "naive_mae": 7.12,
         "rmae": 0.797,
         "cover80": 1.0
+      },
+      {
+        "date": "2026-07-06",
+        "n": 24,
+        "mae": 6.36,
+        "naive_mae": 6.59,
+        "rmae": 0.966,
+        "cover80": 1.0
       }
     ],
     "summary": {
-      "n_days": 2,
-      "avg_mae_30": 21.0,
-      "avg_mae_7": 21.0,
-      "avg_rmae_7": 0.675,
-      "cover80_mean": 0.854,
+      "n_days": 3,
+      "avg_mae_30": 16.1,
+      "avg_mae_7": 16.1,
+      "avg_rmae_7": 0.772,
+      "cover80_mean": 0.903,
       "best_day": "2026-07-05",
       "best_mae": 5.68,
       "worst_day": "2026-04-04",
