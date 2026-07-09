@@ -416,8 +416,14 @@ function drawPredChart(){
       pointRadius:ptR,pointBackgroundColor:ptC,pointBorderColor:'#fff',pointBorderWidth:1.5,pointHoverRadius:5,label:'中位'}
   ];
   if(hasAct) ds.push({data:act,borderColor:C.coral,borderWidth:2,borderDash:[4,3],tension:.35,fill:false,pointRadius:0,pointHoverRadius:4,label:'实际'});
+  // 纵轴锚定中位线(有实际值时并入),不让 Q10–Q90 宽区间把曲线压平;下限 30 元防平价日被过度放大成假波动,阴影超出部分柔性裁剪(精确区间见「24点明细」)
+  const focus=med.concat(hasAct?act.filter(v=>v!=null):[]);
+  const fLo=Math.min(...focus), fHi=Math.max(...focus), mid=(fLo+fHi)/2;
+  const half=Math.max(fHi-fLo,30)*0.75;
+  const opts=baseChart({unit:'元/MWh',showTip:2});
+  opts.scales.y.min=mid-half; opts.scales.y.max=mid+half;
   if(window._pc) window._pc.destroy();
-  window._pc=new Chart($('#predChart'),{type:'line',data:{labels,datasets:ds},options:baseChart({unit:'元/MWh',showTip:2})});
+  window._pc=new Chart($('#predChart'),{type:'line',data:{labels,datasets:ds},options:opts});
   $('#bandNote').innerHTML='<span style="color:var(--brand)">━</span> 中位　阴影=80% 区间（Q10–Q90）　<span style="color:var(--amber)">┄</span> 均价 '+f1(s.avg_median)+
     (hasAct?'　<span style="color:var(--coral)">┅</span> 事后实际':'')+
     '　<span style="color:var(--coral)">●</span>峰 '+f1(s.peak.price)+'　<span style="color:var(--green)">●</span>谷 '+f1(s.valley.price);
