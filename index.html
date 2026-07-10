@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
-<meta name="app-version" content="5">
+<meta name="app-version" content="6">
 <title>浙江电力 · 日前电价</title>
 <meta name="theme-color" content="#08171c">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -14,7 +14,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 :root{
   /* 钱塘潮汐 · 玉青主色（一眼区别于广东蓝） */
@@ -180,6 +179,7 @@ body::before{
 .arch .sd{font-size:11.5px;color:var(--tx2);margin-top:2px;line-height:1.55}
 
 .chart-box{position:relative;height:230px;margin-top:4px}
+.chart-unavailable{height:100%;display:grid;place-items:center;text-align:center;color:var(--tx3);font-size:12px;line-height:1.7;padding:20px}
 .chart-modes{display:inline-flex;margin-left:auto;padding:2px;border:1px solid var(--card-bd);border-radius:8px;background:rgba(190,240,232,.03);text-transform:none;letter-spacing:0}
 .chart-mode{border:0;background:transparent;color:var(--tx3);border-radius:6px;padding:3px 7px;font-family:var(--sans);font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap}
 .chart-mode.on{color:var(--brand);background:var(--brand-soft)}
@@ -328,7 +328,11 @@ const f1=n=>(Math.round(n*10)/10).toFixed(1);
 const f3=n=>(Math.round(n*1000)/1000).toFixed(3);
 const hh=h=>String(h).padStart(2,'0')+':00';
 const C={brand:'#2dd4bf',brandD:'#0d9488',coral:'#fb7185',green:'#34d399',amber:'#fbbf24',sky:'#38bdf8',tx2:'#8ea9a5',line:'rgba(190,240,232,.07)'};
-const UI_VERSION='v5';
+const UI_VERSION='v6';
+const CHART_SRCS=[
+  'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js',
+  'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js'
+];
 let DATA=null;
 let LOAD_FAILED=false;
 let PRED_CHART_MODE='band';
@@ -379,6 +383,33 @@ function riskSummary(hrs,s){
     text:'无尖峰信号 · 模型区间较窄',clarity:'区间偏窄 · 模型分歧较小'};
 }
 
+function loadScript(src){
+  return new Promise((resolve,reject)=>{
+    const s=document.createElement('script');
+    const timer=setTimeout(()=>{s.remove();reject(new Error('timeout'))},6000);
+    s.src=src;s.async=true;
+    s.onload=()=>{clearTimeout(timer);resolve()};
+    s.onerror=()=>{clearTimeout(timer);s.remove();reject(new Error('load failed'))};
+    document.head.appendChild(s);
+  });
+}
+async function ensureChart(){
+  if(window.Chart)return true;
+  for(const src of CHART_SRCS){
+    try{await loadScript(src);if(window.Chart)return true}catch(e){}
+  }
+  return false;
+}
+function chartReady(id){
+  const canvas=$('#'+id);if(!canvas)return false;
+  const box=canvas.parentElement;
+  const old=box.querySelector('.chart-unavailable');
+  if(window.Chart){canvas.classList.remove('hidden');if(old)old.remove();return true;}
+  canvas.classList.add('hidden');
+  if(!old)box.insertAdjacentHTML('beforeend','<div class="chart-unavailable">图表组件暂时不可用<br>价格数据与交易提示仍可正常查看</div>');
+  return false;
+}
+
 function boot(){
   setView('pred',false);
   document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
@@ -408,16 +439,27 @@ function setView(v,resetScroll){
 
 async function load(){
   const refresh=$('#refreshBtn');refresh.disabled=true;
+  const chartPromise=ensureChart();
+  let nextData=null;
   try{
     const r=await fetch('./data.json?t='+Date.now(),{cache:'no-store'});
     if(!r.ok)throw new Error(r.status);
-    DATA=await r.json();
-    LOAD_FAILED=false;
-    render();
+    nextData=await r.json();
   }catch(e){
     LOAD_FAILED=true;
     if(DATA)renderDataState();
-    else $('#loading').innerHTML='<div style="color:var(--coral)">⚠ 暂时无法载入数据</div><div style="font-size:12px;margin-top:8px;color:var(--tx3)">'+e+'</div>';
+    else $('#loading').innerHTML='<div style="color:var(--coral)">⚠ 暂时无法载入价格数据</div><div style="font-size:12px;margin-top:8px;color:var(--tx3)">'+e+'</div>';
+    refresh.disabled=false;return;
+  }
+  try{
+    DATA=nextData;
+    LOAD_FAILED=false;
+    await chartPromise;
+    render();
+  }catch(e){
+    console.error('render failed',e);
+    $('#loading').classList.remove('hidden');
+    $('#loading').innerHTML='<div style="color:var(--coral)">⚠ 页面渲染异常</div><div style="font-size:12px;margin-top:8px;color:var(--tx3)">'+e+'</div>';
   }finally{refresh.disabled=false}
 }
 
@@ -500,6 +542,7 @@ function fmtHrs(arr){
 }
 
 function drawPredChart(){
+  if(!chartReady('predChart'))return;
   const p=DATA.prediction, s=p.summary, hrs=p.hours;
   const labels=hrs.map(h=>hh(h.hour));
   const med=hrs.map(h=>h.median), q90=hrs.map(h=>h.q90), q10=hrs.map(h=>h.q10);
@@ -580,12 +623,15 @@ function renderCompare(){
     $('#cmpCard').querySelector('.chart-box').innerHTML='<div class="cmp-empty">尚无已结算对比日<br>次日预测经事后实际结算后自动出现</div>';
     return;
   }
+  const chartBox=$('#cmpCard').querySelector('.chart-box');
+  if(!chartBox.querySelector('#cmpChart'))chartBox.innerHTML='<canvas id="cmpChart"></canvas>';
   if(CMP_SEL<0||CMP_SEL>=list.length) CMP_SEL=list.length-1;
   datesEl.innerHTML=list.map((c,i)=>'<div class="cmp-day'+(i===CMP_SEL?' on':'')+'" data-i="'+i+'">'+c.date.slice(5)+'</div>').join('');
   datesEl.querySelectorAll('.cmp-day').forEach(el=>el.onclick=()=>{CMP_SEL=+el.dataset.i;renderCompare();});
   drawCompare(list[CMP_SEL]);
 }
 function drawCompare(c){
+  if(!chartReady('cmpChart'))return;
   const labels=c.hours.map(h=>hh(h.hour));
   const pred=c.hours.map(h=>h.pred), actual=c.hours.map(h=>h.actual);
   if(window._cc) window._cc.destroy();
@@ -611,6 +657,7 @@ function drawCompare(c){
 }
 
 function drawAccChart(){
+  if(!chartReady('accChart'))return;
   const a=DATA.accuracy;
   const recs=a.records.filter(r=>r.rmae!=null);
   const labels=recs.map(r=>r.date.slice(5));
@@ -686,7 +733,7 @@ if('serviceWorker' in navigator){
     swRefreshing=true;
     window.location.reload();
   });
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=5')
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=6')
     .then(reg=>reg.update()).catch(()=>{}));
 }
 </script>

@@ -1,14 +1,16 @@
 /* 浙江电力日前电价 PWA · service worker
    页面导航与 data.json 走 network-first，静态依赖走 cache-first。
    改版时把 VER 加一位；新 SW 激活后旧壳不再长期滞留。 */
-const VER = 'zjpower-v5';
+const VER = 'zjpower-v6';
 const SHELL = [
   './',
   './index.html',
   './manifest.webmanifest',
+  './data.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
-  'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js'
+  'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js',
+  'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js'
 ];
 
 self.addEventListener('install', e => {
@@ -48,11 +50,12 @@ self.addEventListener('fetch', e => {
   // data.json：network-first，拿到就更新缓存，失败回退缓存
   if (url.pathname.endsWith('/data.json')) {
     e.respondWith(
-      fetch(e.request).then(resp => {
+      fetch(e.request, {cache: 'no-store'}).then(resp => {
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const copy = resp.clone();
         caches.open(VER).then(c => c.put('./data.json', copy));
         return resp;
-      }).catch(() => caches.match('./data.json'))
+      }).catch(() => caches.match('./data.json').then(hit => hit || Response.error()))
     );
     return;
   }
