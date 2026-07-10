@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="app-version" content="5">
 <title>浙江电力 · 日前电价</title>
 <meta name="theme-color" content="#08171c">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -327,6 +328,7 @@ const f1=n=>(Math.round(n*10)/10).toFixed(1);
 const f3=n=>(Math.round(n*1000)/1000).toFixed(3);
 const hh=h=>String(h).padStart(2,'0')+':00';
 const C={brand:'#2dd4bf',brandD:'#0d9488',coral:'#fb7185',green:'#34d399',amber:'#fbbf24',sky:'#38bdf8',tx2:'#8ea9a5',line:'rgba(190,240,232,.07)'};
+const UI_VERSION='v5';
 let DATA=null;
 let LOAD_FAILED=false;
 let PRED_CHART_MODE='band';
@@ -423,7 +425,7 @@ function render(){
   $('#loading').classList.add('hidden');
   $('#machineTag').textContent='['+(DATA.meta.machine||'—')+']';
   $('#genLine').textContent='更新于 '+relTime(DATA.meta.generated_at)+' · 数据截至 '+DATA.meta.data_date;
-  $('#foot').textContent='ZJPOWER · '+(DATA.model.version||'')+' · 仅供内部参考';
+  $('#foot').textContent='ZJPOWER · UI '+UI_VERSION+' · '+(DATA.model.version||'')+' · 仅供内部参考';
   renderDataState();
   renderPred(); renderAcc(); renderModel();
 }
@@ -678,7 +680,14 @@ function baseChart({unit,showTip,dec}){
 
 boot();
 if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+  let swRefreshing=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(swRefreshing)return;
+    swRefreshing=true;
+    window.location.reload();
+  });
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=5')
+    .then(reg=>reg.update()).catch(()=>{}));
 }
 </script>
 </body>
