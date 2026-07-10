@@ -28,6 +28,7 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit}
 body{
   font-family:var(--sans); background:var(--bg); color:var(--tx);
   min-height:100vh; line-height:1.5; overflow-x:hidden;
@@ -53,6 +54,7 @@ body::before{
   backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
 }
 .top-row{display:flex; align-items:center; gap:10px}
+.top-row>div:nth-child(2){min-width:0}
 .spark{
   width:34px;height:34px;border-radius:10px;flex:0 0 auto;display:grid;place-items:center;
   background:linear-gradient(145deg,var(--brand),var(--brand-d));
@@ -69,8 +71,19 @@ body::before{
 
 /* ── 段式 Tab ── */
 .tabs{display:flex;gap:4px;margin-top:12px;padding:4px;border-radius:14px;background:rgba(190,240,232,.04);border:1px solid var(--card-bd)}
-.tab{flex:1;text-align:center;padding:9px 0;border-radius:10px;font-size:13.5px;font-weight:700;color:var(--tx2);cursor:pointer;transition:.25s}
+.tab{flex:1;text-align:center;padding:9px 0;border:0;background:transparent;border-radius:10px;font-size:13.5px;font-weight:700;color:var(--tx2);cursor:pointer;transition:.25s}
 .tab.on{color:#04231f;background:linear-gradient(145deg,var(--brand),var(--brand-d));box-shadow:0 5px 16px rgba(13,148,136,.42)}
+
+/* ── 数据状态：只在过期/离线时占位，避免正常态挤压首屏 ── */
+.data-state{display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px 12px;border-radius:13px;border:1px solid transparent;font-size:12px}
+.data-state.stale{color:var(--amber);background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.32)}
+.data-state.offline{color:var(--coral);background:rgba(251,113,133,.12);border-color:rgba(251,113,133,.32)}
+.data-state .state-led{width:9px;height:9px;border-radius:50%;background:currentColor;box-shadow:0 0 9px currentColor;flex:0 0 auto}
+.data-state .state-copy{min-width:0;display:grid;gap:1px}
+.data-state strong{font-size:12.5px}
+.data-state small{color:var(--tx2);font-size:10.5px;line-height:1.35}
+.data-state button{margin-left:auto;flex:0 0 auto;border:1px solid currentColor;background:transparent;border-radius:9px;padding:6px 10px;font-weight:700;cursor:pointer}
+.data-state button:disabled{opacity:.45}
 
 /* ── 卡片 ── */
 .card{
@@ -121,8 +134,8 @@ body::before{
 .tip .k{font-size:12.5px;color:var(--tx2)} .tip .v{margin-left:auto;font-weight:700;font-size:13px;text-align:right;max-width:62%}
 
 /* ── 24点表 ── */
-.h24{display:grid;grid-template-columns:repeat(2,1fr);gap:0 18px;margin-top:4px}
-.h24 .r{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+.h24{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px;margin-top:4px}
+.h24 .r{display:flex;align-items:center;gap:8px;min-width:0;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
 .h24 .t{font-family:var(--mono);color:var(--tx3);font-size:12px;width:42px}
 .h24 .rng{font-family:var(--mono);font-size:10px;color:var(--tx3);margin-left:2px}
 .h24 .p{font-family:var(--mono);font-weight:600;margin-left:auto}
@@ -166,12 +179,36 @@ body::before{
 .arch .sd{font-size:11.5px;color:var(--tx2);margin-top:2px;line-height:1.55}
 
 .chart-box{position:relative;height:230px;margin-top:4px}
+.chart-modes{display:inline-flex;margin-left:auto;padding:2px;border:1px solid var(--card-bd);border-radius:8px;background:rgba(190,240,232,.03);text-transform:none;letter-spacing:0}
+.chart-mode{border:0;background:transparent;color:var(--tx3);border-radius:6px;padding:3px 7px;font-family:var(--sans);font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap}
+.chart-mode.on{color:var(--brand);background:var(--brand-soft)}
 .note{font-size:11px;color:var(--tx3);margin-top:10px;line-height:1.65}
 .foot{text-align:center;color:var(--tx3);font-size:10.5px;font-family:var(--mono);margin-top:22px;letter-spacing:.5px}
 .hidden{display:none}
 .loading{text-align:center;padding:80px 0;color:var(--tx2)}
 .spin{width:30px;height:30px;border:3px solid var(--card-bd);border-top-color:var(--brand);border-radius:50%;margin:0 auto 14px;animation:sp 1s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
+
+@media(max-width:380px){
+  .wrap{padding:0 12px}
+  .top{margin:0 -12px;padding-left:12px;padding-right:12px}
+  .h24{gap:0 10px}
+  .h24 .r{gap:4px;font-size:12px}
+  .h24 .t{width:36px;font-size:11px}
+  .h24 .rng{font-size:9.5px;margin-left:0}
+  .dot{width:6px;height:6px}
+}
+@media(max-width:340px){
+  .tag{display:none}
+  .ttl small{font-size:10px;letter-spacing:1px}
+  .chips,.m3{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .h24{grid-template-columns:1fr}
+  .h24 .r{gap:8px;font-size:13px}
+  .h24 .t{width:42px;font-size:12px}
+  .h24 .rng{font-size:10px}
+  .bignum{font-size:48px}
+  .chart-mode{padding:3px 5px}
+}
 </style>
 </head>
 <body>
@@ -187,11 +224,17 @@ body::before{
     </div>
     <div class="gen" id="genLine">载入中…</div>
     <nav class="tabs">
-      <div class="tab on" data-tab="pred">预测</div>
-      <div class="tab" data-tab="acc">复盘</div>
-      <div class="tab" data-tab="model">模型</div>
+      <button type="button" class="tab on" data-tab="pred" aria-selected="true">预测</button>
+      <button type="button" class="tab" data-tab="acc" aria-selected="false">复盘</button>
+      <button type="button" class="tab" data-tab="model" aria-selected="false">模型</button>
     </nav>
   </header>
+
+  <div id="dataState" class="data-state hidden" role="status" aria-live="polite">
+    <span class="state-led"></span>
+    <span class="state-copy"><strong id="stateTitle"></strong><small id="stateDetail"></small></span>
+    <button type="button" id="refreshBtn">刷新</button>
+  </div>
 
   <div id="loading" class="loading"><div class="spin"></div>正在载入快照…</div>
 
@@ -205,7 +248,12 @@ body::before{
     </div>
 
     <div class="card">
-      <div class="card-h">24 点预测曲线 <span class="r">中位 + 80% 区间</span></div>
+      <div class="card-h">24 点预测曲线
+        <span class="chart-modes" role="group" aria-label="图表范围">
+          <button type="button" class="chart-mode on" data-mode="band">全区间</button>
+          <button type="button" class="chart-mode" data-mode="trend">中位走势</button>
+        </span>
+      </div>
       <div class="chart-box"><canvas id="predChart"></canvas></div>
       <div class="note" id="bandNote"></div>
     </div>
@@ -280,6 +328,8 @@ const f3=n=>(Math.round(n*1000)/1000).toFixed(3);
 const hh=h=>String(h).padStart(2,'0')+':00';
 const C={brand:'#2dd4bf',brandD:'#0d9488',coral:'#fb7185',green:'#34d399',amber:'#fbbf24',sky:'#38bdf8',tx2:'#8ea9a5',line:'rgba(190,240,232,.07)'};
 let DATA=null;
+let LOAD_FAILED=false;
+let PRED_CHART_MODE='band';
 
 function relTime(iso){
   try{
@@ -290,32 +340,83 @@ function relTime(iso){
     return Math.round(mins/1440)+' 天前';
   }catch(e){return iso}
 }
+function dayKey(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function renderDataState(){
+  if(!DATA)return;
+  const box=$('#dataState'), meta=DATA.meta||{}, predDate=meta.pred_date||DATA.prediction?.date||'';
+  const generated=new Date(meta.generated_at), ageH=isNaN(generated.getTime())?0:(Date.now()-generated.getTime())/3600000;
+  const expired=!!predDate&&predDate<dayKey(new Date());
+  const tooOld=ageH>48;
+  const offline=navigator.onLine===false||LOAD_FAILED;
+  if(!offline&&!expired&&!tooOld){ box.className='data-state hidden'; return; }
+  box.className='data-state '+(offline?'offline':'stale');
+  if(offline){
+    $('#stateTitle').textContent=LOAD_FAILED?'刷新失败 · 正在显示上次快照':'离线模式 · 正在显示缓存';
+    $('#stateDetail').textContent='目标日 '+predDate+' · 请恢复网络后刷新确认';
+  }else{
+    $('#stateTitle').textContent=expired?'预测已过期':'快照更新时间异常';
+    $('#stateDetail').textContent=(expired?'目标日 '+predDate+' 已早于今天':'生成于 '+relTime(meta.generated_at))+' · 请勿直接用于交易';
+  }
+}
 // 预警 → 样式类
 function warnClass(w){ if(!w)return'ok'; if(w.includes('尖峰'))return'spike'; if(w.includes('不确定')||w.includes('宽'))return'wide'; return'ok' }
 
+function riskSummary(hrs,s){
+  const bandW=s.band80.q90_avg-s.band80.q10_avg;
+  const spike=hrs.filter(h=>warnClass(h.warning)==='spike').length;
+  const wide=hrs.filter(h=>warnClass(h.warning)==='wide').length;
+  if(spike>0)return {cls:'spike',bandW,spike,wide,
+    text:'尖峰风险 · '+spike+' 个时段中位与 Q90 双确认',clarity:'尖峰信号已触发'};
+  if(wide>0||bandW>=100)return {cls:'wide',bandW,spike,wide,
+    text:'无尖峰信号 · 模型不确定性偏高',clarity:'区间偏宽 · 模型把握有限'};
+  if(bandW>=50)return {cls:'wide',bandW,spike,wide,
+    text:'无尖峰信号 · 模型不确定性中等',clarity:'区间适中 · 存在一定分歧'};
+  return {cls:'ok',bandW,spike,wide,
+    text:'无尖峰信号 · 模型区间较窄',clarity:'区间偏窄 · 模型分歧较小'};
+}
+
 function boot(){
-  setView('pred');
+  setView('pred',false);
   document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
-    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
-    t.classList.add('on'); setView(t.dataset.tab);
+    document.querySelectorAll('.tab').forEach(x=>{x.classList.remove('on');x.setAttribute('aria-selected','false')});
+    t.classList.add('on');t.setAttribute('aria-selected','true');setView(t.dataset.tab,true);
   });
+  document.querySelectorAll('.chart-mode').forEach(t=>t.onclick=()=>{
+    document.querySelectorAll('.chart-mode').forEach(x=>x.classList.remove('on'));
+    t.classList.add('on');PRED_CHART_MODE=t.dataset.mode;if(DATA)drawPredChart();
+  });
+  $('#refreshBtn').onclick=()=>load();
+  window.addEventListener('online',()=>{LOAD_FAILED=false;renderDataState()});
+  window.addEventListener('offline',renderDataState);
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')renderDataState()});
   load();
 }
-function setView(v){
+function setView(v,resetScroll){
   document.querySelectorAll('.view').forEach(s=>s.classList.add('hidden'));
   const el=$('#'+v); if(el){el.classList.remove('hidden');
     el.querySelectorAll('.card').forEach((c,i)=>{c.style.animation='none';c.offsetHeight;c.style.animation='rise .5s both';c.style.animationDelay=(i*0.05)+'s'});}
+  if(resetScroll){
+    const top=()=>{document.documentElement.scrollTop=0;document.body.scrollTop=0;window.scrollTo(0,0)};
+    // 切换 display 后浏览器可能执行一次滚动锚定；当前帧和下一帧都归零。
+    top();requestAnimationFrame(()=>{top();requestAnimationFrame(top)});
+  }
 }
 
 async function load(){
+  const refresh=$('#refreshBtn');refresh.disabled=true;
   try{
     const r=await fetch('./data.json?t='+Date.now(),{cache:'no-store'});
     if(!r.ok)throw new Error(r.status);
     DATA=await r.json();
+    LOAD_FAILED=false;
     render();
   }catch(e){
-    $('#loading').innerHTML='<div style="color:var(--coral)">⚠ 暂时无法载入数据</div><div style="font-size:12px;margin-top:8px;color:var(--tx3)">'+e+'</div>';
-  }
+    LOAD_FAILED=true;
+    if(DATA)renderDataState();
+    else $('#loading').innerHTML='<div style="color:var(--coral)">⚠ 暂时无法载入数据</div><div style="font-size:12px;margin-top:8px;color:var(--tx3)">'+e+'</div>';
+  }finally{refresh.disabled=false}
 }
 
 function render(){
@@ -323,12 +424,14 @@ function render(){
   $('#machineTag').textContent='['+(DATA.meta.machine||'—')+']';
   $('#genLine').textContent='更新于 '+relTime(DATA.meta.generated_at)+' · 数据截至 '+DATA.meta.data_date;
   $('#foot').textContent='ZJPOWER · '+(DATA.model.version||'')+' · 仅供内部参考';
+  renderDataState();
   renderPred(); renderAcc(); renderModel();
 }
 
 /* ───── 预测 ───── */
 function renderPred(){
   const p=DATA.prediction, s=p.summary, hrs=p.hours;
+  const risk=riskSummary(hrs,s);
   $('#predDate').textContent=p.date;
   $('#avgPrice').textContent=f1(s.avg_median);
 
@@ -341,12 +444,8 @@ function renderPred(){
     $('#deltaBox').innerHTML='<span class="delta '+cls+'">'+arw+' '+f1(Math.abs(d))+' 元/MWh 较昨日</span>';
   }
 
-  // 预警条
-  const wc=s.warning_counts||{}; const spike=wc['高度尖峰·双确认']||0, wide=wc['不确定性偏高']||0;
-  let wCls='ok', wTxt='全天常态 · 无尖峰、区间平稳';
-  if(spike>0){ wCls='spike'; wTxt='高度尖峰预警 · '+spike+' 个时段中位与 Q90 双双指向尖峰'; }
-  else if(wide>0){ wCls='wide'; wTxt='不确定性偏高 · '+wide+' 个时段 80% 区间偏宽，模型把握有限'; }
-  $('#warnBar').className='warnbar '+wCls; $('#warnTxt').textContent=wTxt;
+  // 预警与「区间判断」共用同一风险摘要，避免同屏给出相反结论
+  $('#warnBar').className='warnbar '+risk.cls; $('#warnTxt').textContent=risk.text;
 
   // chips
   const bandW=s.band80.q90_avg-s.band80.q10_avg;
@@ -360,7 +459,7 @@ function renderPred(){
   ].map(([k,cls,v,sub])=>'<div class="chip '+cls+'"><div class="k">'+k+'</div><div class="v">'+v+'</div><div class="s">'+sub+'</div></div>').join('');
 
   // 交易提示（从 hours 计算）
-  $('#tips').innerHTML=buildTips(hrs,s).map(([i,k,v])=>
+  $('#tips').innerHTML=buildTips(hrs,s,risk).map(([i,k,v])=>
     '<div class="tip"><span class="ic">'+i+'</span><span class="k">'+k+'</span><span class="v">'+v+'</span></div>').join('');
 
   // 24 点明细
@@ -377,18 +476,16 @@ function renderPred(){
 }
 
 // 交易提示：低价窗口 / 高价时段 / 区间判断 / 尖峰关注
-function buildTips(hrs,s){
+function buildTips(hrs,s,risk){
   const sorted=[...hrs].sort((a,b)=>a.median-b.median);
   const lowHrs=sorted.slice(0,3).map(h=>h.hour).sort((a,b)=>a-b);
   const highHrs=sorted.slice(-3).map(h=>h.hour).sort((a,b)=>a-b);
-  const bandW=s.band80.q90_avg-s.band80.q10_avg;
-  const clarity=bandW<50?'区间偏窄 · 行情清晰':bandW<100?'区间适中 · 存在分歧':'区间偏宽 · 高度不确定';
   const spikeH=hrs.filter(h=>warnClass(h.warning)==='spike').map(h=>h.hour);
   const focus=spikeH.length?spikeH.map(hh).join('、'):'无尖峰预警时段';
   return [
     ['🟢','低价窗口',fmtHrs(lowHrs)+' · 谷 '+f1(s.valley.price)],
     ['🔺','高价时段',fmtHrs(highHrs)+' · 峰 '+f1(s.peak.price)],
-    ['📐','区间判断',clarity+'（±'+f1(bandW/2)+'）'],
+    ['📐','区间判断',risk.clarity+'（均宽 '+f1(risk.bandW)+'）'],
     ['🎯','尖峰关注',focus],
   ];
 }
@@ -408,23 +505,35 @@ function drawPredChart(){
   const act=hrs.map(h=>h.actual!=null?h.actual:null);
   const ptC=hrs.map(h=>h.hour===s.peak.hour?C.coral:h.hour===s.valley.hour?C.green:'rgba(0,0,0,0)');
   const ptR=hrs.map(h=>(h.hour===s.peak.hour||h.hour===s.valley.hour)?4.5:0);
-  const ds=[
+  const fullBand=PRED_CHART_MODE==='band';
+  const ds=[];
+  if(fullBand)ds.push(
     {data:q90,borderColor:'rgba(0,0,0,0)',pointRadius:0,fill:false,_band:1},
-    {data:q10,borderColor:'rgba(0,0,0,0)',pointRadius:0,fill:'-1',backgroundColor:'rgba(45,212,191,.13)',_band:1},
+    {data:q10,borderColor:'rgba(0,0,0,0)',pointRadius:0,fill:'-1',backgroundColor:'rgba(45,212,191,.13)',_band:1}
+  );
+  ds.push(
     {data:hrs.map(()=>s.avg_median),borderColor:C.amber,borderWidth:1.3,borderDash:[5,4],pointRadius:0,fill:false,_band:1},
     {data:med,borderColor:C.brand,borderWidth:2.5,tension:.35,fill:false,
       pointRadius:ptR,pointBackgroundColor:ptC,pointBorderColor:'#fff',pointBorderWidth:1.5,pointHoverRadius:5,label:'中位'}
-  ];
+  );
   if(hasAct) ds.push({data:act,borderColor:C.coral,borderWidth:2,borderDash:[4,3],tension:.35,fill:false,pointRadius:0,pointHoverRadius:4,label:'实际'});
-  // 纵轴锚定中位线(有实际值时并入),不让 Q10–Q90 宽区间把曲线压平;下限 30 元防平价日被过度放大成假波动,阴影超出部分柔性裁剪(精确区间见「24点明细」)
   const focus=med.concat(hasAct?act.filter(v=>v!=null):[]);
-  const fLo=Math.min(...focus), fHi=Math.max(...focus), mid=(fLo+fHi)/2;
-  const half=Math.max(fHi-fLo,30)*0.75;
-  const opts=baseChart({unit:'元/MWh',showTip:2});
-  opts.scales.y.min=mid-half; opts.scales.y.max=mid+half;
+  const opts=baseChart({unit:'元/MWh',showTip:fullBand?2:0});
+  if(fullBand){
+    // 全区间模式必须完整容纳 Q10–Q90，禁止用裁切制造“模型很确定”的错觉。
+    const all=q10.concat(q90,focus), lo=Math.min(...all), hi=Math.max(...all);
+    const pad=Math.max((hi-lo)*0.06,5);
+    opts.scales.y.min=lo-pad;opts.scales.y.max=hi+pad;
+  }else{
+    // 中位走势模式只画中位/实际，不再展示被裁切的区间阴影。
+    const fLo=Math.min(...focus), fHi=Math.max(...focus), mid=(fLo+fHi)/2;
+    const half=Math.max(fHi-fLo,30)*0.75;
+    opts.scales.y.min=mid-half;opts.scales.y.max=mid+half;
+  }
   if(window._pc) window._pc.destroy();
   window._pc=new Chart($('#predChart'),{type:'line',data:{labels,datasets:ds},options:opts});
-  $('#bandNote').innerHTML='<span style="color:var(--brand)">━</span> 中位　阴影=80% 区间（Q10–Q90）　<span style="color:var(--amber)">┄</span> 均价 '+f1(s.avg_median)+
+  $('#bandNote').innerHTML=(fullBand?'<b style="color:var(--brand)">完整显示</b> Q10–Q90 80% 区间　':'<b style="color:var(--amber)">走势模式</b> 已隐藏区间阴影　')+
+    '<span style="color:var(--brand)">━</span> 中位　<span style="color:var(--amber)">┄</span> 均价 '+f1(s.avg_median)+
     (hasAct?'　<span style="color:var(--coral)">┅</span> 事后实际':'')+
     '　<span style="color:var(--coral)">●</span>峰 '+f1(s.peak.price)+'　<span style="color:var(--green)">●</span>谷 '+f1(s.valley.price);
 }
@@ -433,10 +542,12 @@ function drawPredChart(){
 function rmaeGrade(rmae){ if(rmae==null)return'注意'; if(rmae<0.85)return'优'; if(rmae<0.95)return'良'; if(rmae<1.0)return'注意'; return'退化'; }
 function renderAcc(){
   const a=DATA.accuracy, s=a.summary||{};
-  $('#accDays').textContent=(s.n_days||0)+' 天累积';
+  const n7=s.n_days_7!=null?s.n_days_7:Math.min(s.n_days||0,7);
+  const p7=(s.period_7||'').replace(/\d{4}-/g,'');
+  $('#accDays').textContent=n7+' 个有效日'+(p7?' · '+p7:'');
   const grade=rmaeGrade(s.avg_rmae_7);
   $('#statusPill').className='pill '+grade; $('#statusTxt').textContent=grade;
-  const cov=s.cover80_mean;
+  const cov=s.cover80_mean_7!=null?s.cover80_mean_7:s.cover80_mean;
   $('#accSummary').innerHTML=[
     ['近 7 日 rMAE',s.avg_rmae_7!=null?f3(s.avg_rmae_7):'—','vs 抄昨天'],
     ['区间命中率',cov!=null?f0(cov*100)+'%':'—','目标 80%'],
