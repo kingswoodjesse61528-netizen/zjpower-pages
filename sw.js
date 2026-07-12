@@ -1,7 +1,7 @@
 /* 浙江电力日前电价 PWA · service worker
    页面导航与 data.json 走 network-first，静态依赖走 cache-first。
    改版时把 VER 加一位；新 SW 激活后旧壳不再长期滞留。 */
-const VER = 'zjpower-v8';
+const VER = 'zjpower-v9';
 const SHELL = [
   './',
   './index.html',
