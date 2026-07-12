@@ -1,7 +1,7 @@
 /* 浙江电力日前电价 PWA · service worker
    页面导航与 data.json 走 network-first，静态依赖走 cache-first。
    改版时把 VER 加一位；新 SW 激活后旧壳不再长期滞留。 */
-const VER = 'zjpower-v6';
+const VER = 'zjpower-v7';
 const SHELL = [
   './',
   './index.html',
@@ -15,10 +15,10 @@ const SHELL = [
 
 self.addEventListener('install', e => {
   self.skipWaiting();
-  // 绕过浏览器 HTTP 缓存预取新壳，避免 GitHub Pages 的 max-age=600 把旧 index 装进新缓存。
+  // 逐个预取壳资源；WebKit 对 SW 内的 cache:'reload' 有兼容问题，改用默认缓存策略，靠 VER 加位+network-first 保新鲜。
   e.waitUntil(caches.open(VER).then(c => Promise.all(SHELL.map(async asset => {
     try {
-      const resp = await fetch(asset, {cache: 'reload'});
+      const resp = await fetch(asset);
       if (resp.ok) await c.put(asset, resp);
     } catch (_) {}
   }))));
@@ -38,7 +38,7 @@ self.addEventListener('fetch', e => {
   if (e.request.mode === 'navigate' ||
       (url.origin === location.origin && (url.pathname.endsWith('/') || url.pathname.endsWith('/index.html')))) {
     e.respondWith(
-      fetch(e.request, {cache: 'no-store'}).then(resp => {
+      fetch(e.request).then(resp => {
         const copy = resp.clone();
         caches.open(VER).then(c => c.put('./index.html', copy));
         return resp;
@@ -47,15 +47,16 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // data.json：network-first，拿到就更新缓存，失败回退缓存
+  // data.json：network-first。页面侧已带 ?t= 时间戳兜住 HTTP 缓存，这里不再叠 no-store（WebKit 的 SW 雷区）。
+  // 失败时先回退上次缓存；缓存也没有时，最后再走一次普通网络，绝不用 Response.error() 假摔成 Failed to fetch。
   if (url.pathname.endsWith('/data.json')) {
     e.respondWith(
-      fetch(e.request, {cache: 'no-store'}).then(resp => {
+      fetch(e.request).then(resp => {
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const copy = resp.clone();
         caches.open(VER).then(c => c.put('./data.json', copy));
         return resp;
-      }).catch(() => caches.match('./data.json').then(hit => hit || Response.error()))
+      }).catch(() => caches.match('./data.json').then(hit => hit || fetch(e.request)))
     );
     return;
   }
