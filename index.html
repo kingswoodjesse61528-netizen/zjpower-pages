@@ -13,7 +13,8 @@
 <link rel="apple-touch-icon" href="./icons/icon-192-v2.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Google Fonts 改为非阻塞加载：大陆网络访问不到 fonts.googleapis.com 也不会卡住首屏，系统字体先顶上 -->
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <style>
 :root{
   /* 钱塘潮汐 · 玉青主色（一眼区别于广东蓝） */
@@ -330,6 +331,7 @@ const hh=h=>String(h).padStart(2,'0')+':00';
 const C={brand:'#2dd4bf',brandD:'#0d9488',coral:'#fb7185',green:'#34d399',amber:'#fbbf24',sky:'#38bdf8',tx2:'#8ea9a5',line:'rgba(190,240,232,.07)'};
 const UI_VERSION='v6';
 const CHART_SRCS=[
+  './vendor/chart.umd.js',
   'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js',
   'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js'
 ];
