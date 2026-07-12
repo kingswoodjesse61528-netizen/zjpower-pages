@@ -1,14 +1,14 @@
 /* 浙江电力日前电价 PWA · service worker
    页面导航与 data.json 走 network-first，静态依赖走 cache-first。
    改版时把 VER 加一位；新 SW 激活后旧壳不再长期滞留。 */
-const VER = 'zjpower-v11';
+const VER = 'zjpower-v12';
 const SHELL = [
   './',
   './index.html',
   './manifest.webmanifest',
   './data.json',
-  './icons/icon-192-v3.png',
-  './icons/icon-512-v3.png',
+  './icons/icon-192-v4.png',
+  './icons/icon-512-v4.png',
   './vendor/chart.umd.js',
   'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js',
   'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js'
