@@ -1,7 +1,7 @@
 {
   "meta": {
-    "generated_at": "2026-07-16T09:30:59",
-    "machine": "MacBook-Air",
+    "generated_at": "2026-07-17T07:50:40",
+    "machine": "Mac-mini",
     "data_date": "2026-07-16",
     "pred_date": "2026-07-17"
   },
@@ -256,28 +256,28 @@
         "cover80": 0.625
       },
       {
-        "date": "2026-07-15",
+        "date": "2026-07-16",
         "n": 24,
-        "mae": 20.05,
-        "naive_mae": 8.24,
-        "rmae": 2.434,
-        "cover80": 1.0
+        "mae": 141.46,
+        "naive_mae": 123.8,
+        "rmae": 1.143,
+        "cover80": 0.5
       }
     ],
     "summary": {
-      "n_days": 11,
+      "n_days": 8,
       "n_days_7": 6,
-      "avg_mae_30": 28.8,
-      "avg_mae_7": 40.4,
-      "avg_rmae_7": 1.061,
-      "cover80_mean": 0.841,
-      "cover80_mean_7": 0.791,
-      "period_7": "2026-07-10 ~ 2026-07-15",
-      "period_30": "2026-07-05 ~ 2026-07-15",
-      "best_day": "2026-07-05",
-      "best_mae": 5.68,
-      "worst_day": "2026-07-11",
-      "worst_mae": 119.95
+      "avg_mae_30": 53.8,
+      "avg_mae_7": 62.5,
+      "avg_rmae_7": 0.868,
+      "cover80_mean": 0.719,
+      "cover80_mean_7": 0.708,
+      "period_7": "2026-07-10 ~ 2026-07-16",
+      "period_30": "2026-07-08 ~ 2026-07-16",
+      "best_day": "2026-07-13",
+      "best_mae": 7.12,
+      "worst_day": "2026-07-16",
+      "worst_mae": 141.46
     }
   },
   "model": {
