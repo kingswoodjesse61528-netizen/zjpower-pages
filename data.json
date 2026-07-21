@@ -6,7 +6,7 @@
     "pred_date": "2026-07-21"
   },
   "prediction": {
-    "date": "2026-07-21",
+    "date": "2026-07-22",
     "hours": [
       {
         "hour": 0,
@@ -317,6 +317,14 @@
         "naive_mae": 71.53,
         "rmae": 0.267,
         "cover80": 0.958
+      },
+      {
+        "date": "2026-07-20",
+        "n": 24,
+        "mae": 27.23,
+        "naive_mae": 39.86,
+        "rmae": 0.683,
+        "cover80": 0.958
       }
     ],
     "summary": {
@@ -337,14 +345,14 @@
   },
   "model": {
     "version": "v4-stacking",
-    "trained_at": "2026-07-19T20:35:38",
+    "trained_at": "2026-07-19T20:36:49",
     "train_period": "2025-05-01 ~ 2026-07-18",
     "test_start": "2026-07-19",
     "stage1_feature_count": 10,
     "stage2_feature_count": 25,
     "test_metrics": {
-      "test_mae": 40.39,
-      "test_rmae": 0.565,
+      "test_mae": 38.07,
+      "test_rmae": 0.532,
       "test_n": 24,
       "interval_80_coverage": 0.625
     }
