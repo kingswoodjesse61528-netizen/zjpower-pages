@@ -339,6 +339,8 @@ const CHART_SRCS=[
 let DATA=null;
 let LOAD_FAILED=false;
 let PRED_CHART_MODE='band';
+let POLL_TIMER=null;
+const POLL_MS=5*60*1000;
 
 function relTime(iso){
   try{
@@ -426,8 +428,19 @@ function boot(){
   $('#refreshBtn').onclick=()=>load();
   window.addEventListener('online',()=>{LOAD_FAILED=false;renderDataState()});
   window.addEventListener('offline',renderDataState);
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')load()});
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible'){load();startPoll();}
+    else stopPoll();
+  });
   load();
+  startPoll();
+}
+function startPoll(){
+  stopPoll();
+  POLL_TIMER=setInterval(()=>{if(document.visibilityState==='visible')load()},POLL_MS);
+}
+function stopPoll(){
+  if(POLL_TIMER){clearInterval(POLL_TIMER);POLL_TIMER=null;}
 }
 function setView(v,resetScroll){
   document.querySelectorAll('.view').forEach(s=>s.classList.add('hidden'));
