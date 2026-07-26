@@ -426,7 +426,7 @@ function boot(){
   $('#refreshBtn').onclick=()=>load();
   window.addEventListener('online',()=>{LOAD_FAILED=false;renderDataState()});
   window.addEventListener('offline',renderDataState);
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')renderDataState()});
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')load()});
   load();
 }
 function setView(v,resetScroll){
