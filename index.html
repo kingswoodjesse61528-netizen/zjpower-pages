@@ -153,6 +153,10 @@ body::before{
 .cmp-day{flex:0 0 auto;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--tx2);padding:6px 11px;border-radius:10px;border:1px solid var(--card-bd);background:rgba(190,240,232,.03);cursor:pointer;transition:.2s;white-space:nowrap}
 .cmp-day.on{color:#04231f;background:linear-gradient(145deg,var(--brand),var(--brand-d));border-color:transparent;box-shadow:0 4px 12px rgba(13,148,136,.4)}
 .cmp-empty{text-align:center;color:var(--tx3);font-size:13px;padding:38px 0;line-height:1.7}
+.cmp-day.bf{border-style:dashed;border-color:rgba(251,191,36,.5)}
+.cmp-day.bf.on{border-style:solid}
+.bf-dot{display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--amber);margin-left:4px;vertical-align:middle}
+.bf-note{display:block;margin-top:5px;color:var(--amber);font-size:11px;line-height:1.5}
 
 .pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:5px 12px;border-radius:20px}
 .pill.优{color:var(--brand);background:var(--brand-soft)}
@@ -642,7 +646,11 @@ function renderCompare(){
   const chartBox=$('#cmpCard').querySelector('.chart-box');
   if(!chartBox.querySelector('#cmpChart'))chartBox.innerHTML='<canvas id="cmpChart"></canvas>';
   if(CMP_SEL<0||CMP_SEL>=list.length) CMP_SEL=list.length-1;
-  datesEl.innerHTML=list.map((c,i)=>'<div class="cmp-day'+(i===CMP_SEL?' on':'')+'" data-i="'+i+'">'+c.date.slice(5)+'</div>').join('');
+  datesEl.innerHTML=list.map((c,i)=>{
+    const bf=c.source==='backfill';
+    return '<div class="cmp-day'+(i===CMP_SEL?' on':'')+(bf?' bf':'')+'" data-i="'+i+'">'
+      +c.date.slice(5)+(bf?'<span class="bf-dot"></span>':'')+'</div>';
+  }).join('');
   datesEl.querySelectorAll('.cmp-day').forEach(el=>el.onclick=()=>{CMP_SEL=+el.dataset.i;renderCompare();});
   drawCompare(list[CMP_SEL]);
 }
@@ -653,7 +661,8 @@ function drawCompare(c){
   if(window._cc) window._cc.destroy();
   window._cc=new Chart($('#cmpChart'),{type:'line',
     data:{labels,datasets:[
-      {label:'预测',data:pred,borderColor:C.brand,borderWidth:2.3,tension:.35,fill:false,pointRadius:0,pointHoverRadius:4},
+      {label:(c.source==='backfill'?'预测（补算）':'预测'),data:pred,borderColor:C.brand,borderWidth:2.3,
+       borderDash:(c.source==='backfill'?[6,4]:[]),tension:.35,fill:false,pointRadius:0,pointHoverRadius:4},
       {label:'实际',data:actual,borderColor:C.coral,borderWidth:2.3,tension:.35,fill:'-1',backgroundColor:'rgba(251,113,133,.10)',pointRadius:0,pointHoverRadius:4},
     ]},
     options:Object.assign(baseChart({unit:'元/MWh',showTip:0}),{
@@ -663,7 +672,10 @@ function drawCompare(c){
       })
     })
   });
-  $('#cmpNote').innerHTML='<span style="color:var(--brand)">━</span> 预测　<span style="color:var(--coral)">━</span> 事后实际　阴影=偏差';
+  $('#cmpNote').innerHTML='<span style="color:var(--brand)">━</span> 预测　<span style="color:var(--coral)">━</span> 事后实际　阴影=偏差'
+    +(c.source==='backfill'
+      ? '<span class="bf-note">⚠ 该日数据源迁移致系统停摆，无实盘预测；虚线为事后用现役模型补算，气象特征已被修正值覆盖，偏乐观，不计入准确率统计。</span>'
+      : '');
   const actAvg=actual.reduce((x,y)=>x+y,0)/actual.length, predAvg=pred.reduce((x,y)=>x+y,0)/pred.length;
   $('#cmpChips').innerHTML=[
     ['当日 MAE',f1(c.mae),'元/MWh',C.brand],
